@@ -44,6 +44,7 @@ def customer_edit(request, pk):
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     customer.deleted = 1
+    customer.save()
     return redirect('portfolio:customer_list')
 
 @login_required
@@ -54,9 +55,9 @@ def customer_new(request):
             customer = form.save(commit=False)
             customer.created_date = timezone.now()
             customer.save()
-            customers = Customer.objects.filter(deleted=0)
+            customer = Customer.objects.filter(created_date__lte=timezone.now()).filter(deleted=0)
             return render(request, 'portfolio/customer_list.html',
-                          {'customers': customers})
+                          {'customers': customer})
     else:
         form = CustomerForm()
         # print("Else")
