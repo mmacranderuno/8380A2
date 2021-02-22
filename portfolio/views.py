@@ -198,8 +198,8 @@ def customer_portfolio(request, pk):
 
     for stock in stocks:
         stock.current_value = stock.current_stock_value()
-        sum_current_stocks_value += float(stock.current_stock_value())
-        sum_of_initial_stock_value += float(stock.current_value)
+        sum_current_stocks_value += float(stock.current_value)
+        sum_of_initial_stock_value += float(stock.initial_stock_value())
 
     return render(request, 'portfolio/customer_portfolio.html', {'customers': customers,
                                                                  'investments': investments,
