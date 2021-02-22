@@ -1,10 +1,16 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
 from .models import *
 from .forms import *
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
-from django.db.models import Q
+from django.db.models import Sum
+import datetime
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import *
+from django.utils.decorators import method_decorator
+
 
 now = timezone.now()
 
@@ -44,8 +50,18 @@ def customer_edit(request, pk):
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     customer.deleted = 1
+    stocks = Stock.objects.filter(customer=pk)
+    investments = Investment.objects.filter(customer=pk)
+    for stock in stocks:
+        stock.deleted = 1
+        stock.deleted_date = datetime.datetime.now()
+    for investment in investments:
+        investment.deleted = 1
+        investment.deleted_date = datetime.datetime.now()
+    customer.deleted_date = datetime.datetime.now()
     customer.save()
     return redirect('portfolio:customer_list')
+
 
 @login_required
 def customer_new(request):
@@ -150,6 +166,7 @@ def investment_edit(request, pk):
 def stock_delete(request, pk):
     stock = get_object_or_404(Stock, pk=pk)
     stock.deleted = 1
+    stock.deleted_date = datetime.datetime.now()
     stock.save()
     return redirect('portfolio:stock_list')
 
@@ -158,14 +175,69 @@ def stock_delete(request, pk):
 def investment_delete(request, pk):
     investment = get_object_or_404(Investment, pk=pk)
     investment.deleted = 1
+    investment.deleted_date = datetime.datetime.now()
     investment.save()
     return redirect('portfolio:investment_list')
 
 
 @login_required
 def customer_portfolio(request, pk):
+    customers = Customer.objects.filter(created_date__lte=timezone.now())
     investments = Investment.objects.filter(customer=pk)
     stocks = Stock.objects.filter(customer=pk)
-    customers = Customer.objects.filter(pk=pk)
-    return render(request, 'portfolio/customer_portfolio.html', {'investments': investments, 'stocks': stocks,
-                                                                 'customers': customers})
+    sum_recent_value = float(Investment.objects.filter(customer=pk).filter(deleted=0).aggregate(Sum('recent_value'))[
+                                 'recent_value__sum'] or 0.00)
+    sum_acquired_value = float(
+        Investment.objects.filter(customer=pk).filter(deleted=0).aggregate(Sum('acquired_value'))[
+            'acquired_value__sum'] or 0.00)
+    # Initialize the value of the stocks
+    sum_current_stocks_value = float(0)
+    sum_of_initial_stock_value = float(0)
+
+    # Loop through each stock and add the value to the total
+
+    for stock in stocks:
+        stock.current_value = stock.current_stock_value()
+        sum_current_stocks_value += float(stock.current_stock_value())
+        sum_of_initial_stock_value += float(stock.current_value)
+
+    return render(request, 'portfolio/customer_portfolio.html', {'customers': customers,
+                                                                 'investments': investments,
+                                                                 'stocks': stocks,
+                                                                 'sum_acquired_value': sum_acquired_value,
+                                                                 'sum_recent_value': sum_recent_value,
+                                                                 'sum_current_stocks_value':
+                                                                     sum_current_stocks_value,
+                                                                 'sum_of_initial_stock_value':
+                                                                     sum_of_initial_stock_value})
+
+
+@method_decorator(login_required, name='dispatch')
+class CustomerList(APIView):
+    def get(self, request):
+        customers_json = Customer.objects.all()
+        serializer = CustomerSerializer(customers_json, many=True)
+        return Response(serializer.data)
+
+
+@method_decorator(login_required, name='dispatch')
+class StockList(APIView):
+    def get(self, request):
+        stock_json = Stock.objects.all()
+        serializer = StockSerializer(stock_json, many=True)
+        return Response(serializer.data)
+
+
+@method_decorator(login_required, name='dispatch')
+class InvestmentList(APIView):
+    def get(self, request):
+        investment_json = Investment.objects.all()
+        serializer = InvestmentSerializer(investment_json, many=True)
+        return Response(serializer.data)
+
+@login_required()
+def deleted_customers(request):
+    customer = Customer.objects.filter(deleted=1)
+    return render(request, 'portfolio/deleted_customers.html',
+                  {'customers': customer})
+

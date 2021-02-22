@@ -1,6 +1,8 @@
 from django.db import models
+from django.db.models import DecimalField
 from django.utils import timezone
 from django.contrib.auth.models import User
+import requests
 
 
 # Create your models here.
@@ -17,6 +19,7 @@ class Customer(models.Model):
         default=timezone.now)
     updated_date = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False, null=True)
+    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
     def created(self):
         self.created_date = timezone.now()
@@ -47,6 +50,7 @@ class Investment(models.Model):
     recent_value = models.DecimalField(max_digits=10, decimal_places=2)
     recent_date = models.DateField(default=timezone.now, blank=True, null=True)
     deleted = models.BooleanField(default=False, null=True)
+    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
     def created(self):
         self.acquired_date = timezone.now()
@@ -72,6 +76,7 @@ class Stock(models.Model):
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
     purchase_date = models.DateField(default=timezone.now, blank=True, null=True)
     deleted = models.BooleanField(default=False, null=True)
+    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
     def created(self):
         self.recent_date = timezone.now()
@@ -82,4 +87,17 @@ class Stock(models.Model):
         return str(self.customer)
 
     def initial_stock_value(self):
-        return self.shares * self.purchase_price
+        return float(self.shares) * float(self.purchase_price)
+
+    def current_stock_price(self):
+        symbol_f = str(self.symbol)
+        main_api = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol='
+        api_key = '&apikey=8U4PDOUW8SZ7JBMT'
+        url = main_api + symbol_f + api_key
+        json_data = requests.get(url).json()
+        open_price = float(json_data["Global Quote"]["02. open"])
+        share_value = open_price
+        return share_value
+
+    def current_stock_value(self):
+        return float(self.current_stock_price()) * float(self.shares)

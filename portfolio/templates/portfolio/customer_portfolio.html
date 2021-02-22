@@ -1,5 +1,7 @@
 {% extends 'portfolio/base.html' %}
 {% block content %}
+{% load mathfilters %}
+{% load humanize %}
 <html>
 <head>
     <meta charset="UTF-8">
@@ -13,6 +15,7 @@
             background-color: beige;
         }
 
+
 </style>
 <div class="container">
     <div class="row">
@@ -20,12 +23,116 @@
             <div class="panel panel-primary">
                 <div class="panel-heading">Welcome!</div>
                 <div class="panel-body">
-                    Viewing portfolio information for {% for customer in customers %}{{ customer.name }} {% endfor %}
+                    Eagle Financial Services, your Midwest Financial Services Partner
                 </div>
             </div>
         </div>
     </div>
 </div>
+<div class="row">
+    <h1 style="padding-left: 15Px">{% for customer in customers %}{{ customer.name }} {% endfor %} Portfolio</h1>
+</div>
+<div class="row">
+    <h2 style="padding-left: 15Px">Overall Performance</h2>
+</div>
+<div class = "row">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr class="bg-info">
+            <th>Portfolio Initial Investments</th>
+            <th>Portfolio Current Investments</th>
+            <th>Grand Total Results</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{ sum_of_initial_stock_value|add:sum_acquired_value|floatformat:2|intcomma }}</td>
+            <td>{{ sum_recent_value|add:sum_current_stocks_value|floatformat:2|intcomma }}</td>
+            <td>{{ sum_recent_value|add:sum_current_stocks_value|sub:sum_of_initial_stock_value|sub:sum_acquired_value|floatformat:2|intcomma }}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class = "row">
+</div>
+
+<div class="row">
+    <h2 style="padding-left: 15Px">Stocks Information</h2>
+</div>
+<div class="row">
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr class="bg-info">
+            <th>Customer</th>
+            <th>Symbol</th>
+            <th>Name</th>
+            <th>Shares</th>
+            <th>Initial Stock Price</th>
+            <th>Initial Stock Value</th>
+            <th>Current Stock Value</th>
+            <th colspan="2">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for stock in stocks %}
+        {% if stock.deleted == 1 %}
+        <tr>
+            <td><i>{{ stock.customer }}</i></td>
+            <td><i>{{ stock.symbol }}</i></td>
+            <td><i>{{ stock.name }}</i></td>
+            <td><i>{{ stock.shares|intcomma }}</i></td>
+            <td><i>{{ stock.purchase_price|floatformat:2|intcomma }}</i></td>
+            <td><i>{{ stock.initial_stock_value|floatformat:2|intcomma}}</i></td>
+            <td><i>{{ stock.current_value|floatformat:2|intcomma}}</i></td>
+            <td><a href="{% url 'portfolio:stock_edit' pk=stock.pk %}"
+                   class="btn btn-warning">Edit</a></td>
+            <td><i>Deleted {{ stock.deleted_date }}</i></td>
+        </tr>
+        {% else %}
+        <tr>
+            <td>{{ stock.customer }}</td>
+            <td>{{ stock.symbol }}</td>
+            <td>{{ stock.name }}</td>
+            <td>{{ stock.shares|intcomma }}</td>
+            <td>{{ stock.purchase_price|intcomma }}</td>
+            <td>{{ stock.initial_stock_value|floatformat:2|intcomma }}</td>
+            <td>{{ stock.current_value|floatformat:2|intcomma }}</td>
+            <td><a href="{% url 'portfolio:stock_edit' pk=stock.pk %}"
+                   class="btn btn-warning">Edit</a></td>
+            <td><a href="{% url 'portfolio:stock_delete' pk=stock.pk %}"
+                   class="btn btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr class ="bg-info">
+            <th>Total of Initial Stocks</th>
+            <th>Total of CurrentStocks</th>
+            <th>Results</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{ sum_of_initial_stock_value|floatformat:2|intcomma }}</td>
+            <td>{{ sum_current_stocks_value|floatformat:2|intcomma }}</td>
+            <td>{{ sum_current_stocks_value|sub:sum_of_initial_stock_value|floatformat:2|intcomma }}</td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="row">
+        <a href="{% url 'portfolio:stock_new' %}" class="row"><span
+                class="btn btn-primary">Add Stock</span></a>
+    </div>
+</div>
+
+<div class ="row">
+</div>
+
 <div class="row">
     <h2 style="padding-left: 15Px">Investment Information</h2>
 </div>
@@ -40,28 +147,57 @@
             <th>Recent Date</th>
             <th>Acquired Value</th>
             <th>Acquired Date</th>
-            <th>Deleted Status</th>
-            <th colspan="3">Actions</th>
+            <th colspan="2">Actions</th>
         </tr>
         </thead>
         <tbody>
         {% for investment in investments %}
+        {% if investment.deleted == 1 %}
+        <tr>
+            <td><i>{{ investment.customer }}</i></td>
+            <td><i>{{ investment.category }}</i></td>
+            <td><i>{{ investment.description }}</i></td>
+            <td><i>{{ investment.recent_value|floatformat:2|intcomma }}</i></td>
+            <td><i>{{ investment.recent_date }}</i></td>
+            <td><i>{{ investment.acquired_value|floatformat:2|intcomma }}</i></td>
+            <td><i>{{ investment.acquired_date }}</i></td>
+            <td><a href="{% url 'portfolio:investment_edit' pk=investment.pk %}"
+                   class="btn btn-warning">Edit</a></td>
+            <td><i>Deleted {{ investment.deleted_date }}</i></td>
+        </tr>
+        {% else %}
         <tr>
             <td>{{ investment.customer }}</td>
             <td>{{ investment.category }}</td>
             <td>{{ investment.description }}</td>
-            <td>{{ investment.recent_value }}</td>
+            <td>{{ investment.recent_value|floatformat:2|intcomma }}</td>
             <td>{{ investment.recent_date }}</td>
-            <td>{{ investment.acquired_value }}</td>
+            <td>{{ investment.acquired_value|floatformat:2|intcomma }}</td>
             <td>{{ investment.acquired_date }}</td>
-            <td>{{ investment.deleted }}</td>
             <td><a href="{% url 'portfolio:investment_edit' pk=investment.pk %}"
                    class="btn btn-warning">Edit</a></td>
             <td><a href="{% url 'portfolio:investment_delete' pk=investment.pk %}"
                    class="btn btn-danger">Delete</a>
             </td>
         </tr>
+        {% endif %}
         {% endfor %}
+        </tbody>
+    </table>
+    <table class="table table-striped table-bordered table-hover">
+        <thead>
+        <tr class="bg-info">
+            <th>Total of Initial Investments</th>
+            <th>Total of Current Investments</th>
+            <th>Results</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{ sum_acquired_value|floatformat:2|intcomma }}</td>
+            <td>{{ sum_recent_value|floatformat:2|intcomma }}</td>
+            <td>{{ sum_recent_value|sub:sum_acquired_value|floatformat:2|intcomma }}</td>
+        </tr>
         </tbody>
     </table>
     <div class="row">
@@ -70,47 +206,6 @@
     </div>
 </div>
 <br>
-<div class="row">
-    <h2 style="padding-left: 15Px">Stocks Information</h2>
-</div>
-<div>
-    <table class="table table-striped table-bordered table-hover">
-        <thead>
-        <tr class="bg-info">
-            <th>Customer number</th>
-            <th>Symbol</th>
-            <th>Name</th>
-            <th>Shares</th>
-            <th>Purchase Price</th>
-            <th>Purchase Date</th>
-            <th>Deleted Status</th>
-            <th colspan="3">Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for stock in stocks %}
-        <tr>
-            <td>{{ stock.customer }}</td>
-            <td>{{ stock.symbol }}</td>
-            <td>{{ stock.name }}</td>
-            <td>{{ stock.shares }}</td>
-            <td>{{ stock.purchase_price }}</td>
-            <td>{{ stock.purchase_date }}</td>
-            <td>{{ stock.deleted }}</td>
-            <td><a href="{% url 'portfolio:stock_edit' pk=stock.pk %}"
-                   class="btn btn-warning">Edit</a></td>
-            <td><a href="{% url 'portfolio:stock_delete' pk=stock.pk %}"
-                   class="btn btn-danger">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <div class="row">
-        <a href="{% url 'portfolio:stock_new' %}" class="row"><span
-                class="btn btn-primary">Add Stock</span></a>
-    </div>
-</div>
 </body>
 </html>
 {% endblock %}

@@ -1,5 +1,7 @@
 {% extends 'portfolio/base.html' %}
 {% block content %}
+{% load mathfilters %}
+{% load humanize %}
 <html>
 <head>
     <meta charset="UTF-8">
@@ -12,6 +14,7 @@
         body {
             background-color: beige;
         }
+
 
 </style>
 <div class="container">
@@ -45,11 +48,12 @@
         <tbody>
         {% for stock in stocks %}
         <tr>
-            <td>{{ stock.customer }}</td>
+            <td><a href="{% url 'portfolio:customer_portfolio' pk=stock.customer.pk %}"
+                   class="btn btn-success btn-block">{{ stock.customer.name }} ({{ stock.customer }})</a></td>
             <td>{{ stock.symbol }}</td>
             <td>{{ stock.name }}</td>
             <td>{{ stock.shares }}</td>
-            <td>{{ stock.purchase_price }}</td>
+            <td>{{ stock.purchase_price|floatformat:2|intcomma }}</td>
             <td>{{ stock.purchase_date }}</td>
             <td><a href="{% url 'portfolio:stock_edit' pk=stock.pk %}"
                    class="btn btn-warning">Edit</a></td>
@@ -63,6 +67,11 @@
     <div class="row">
         <a href="{% url 'portfolio:stock_new' %}" class="row"><span
                 class="btn btn-primary">Add Stock</span></a>
+    </div>
+    <br>
+    <div class="row">
+        <a href="{% url 'portfolio:stocks_json' %}" class="row"><span
+                class="btn btn-info">JSON</span></a>
     </div>
 </div>
 </body>
