@@ -55,11 +55,11 @@ def customer_delete(request, pk):
     for stock in stocks:
         stock.deleted = 1
         stock.deleted_date = datetime.datetime.now()
-    stocks.save()
+        stock.save()
     for investment in investments:
         investment.deleted = 1
         investment.deleted_date = datetime.datetime.now()
-    investments.save()
+        investment.save()
     customer.deleted_date = datetime.datetime.now()
     customer.save()
     return redirect('portfolio:customer_list')
