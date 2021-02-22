@@ -182,7 +182,7 @@ def investment_delete(request, pk):
 
 @login_required
 def customer_portfolio(request, pk):
-    customers = Customer.objects.filter(created_date__lte=timezone.now())
+    customers = Customer.objects.filter(created_date__lte=timezone.now()).filter(pk=pk)
     investments = Investment.objects.filter(customer=pk)
     stocks = Stock.objects.filter(customer=pk)
     sum_recent_value = float(Investment.objects.filter(customer=pk).filter(deleted=0).aggregate(Sum('recent_value'))[
