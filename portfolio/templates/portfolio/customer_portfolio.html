@@ -30,7 +30,7 @@
     </div>
 </div>
 <div class="row">
-    <h1 style="padding-left: 15Px">{{ customer.name }} {% endfor %} Portfolio</h1>
+    <h1 style="padding-left: 15Px">{% for customers in customer %}{{ customer.name }} {% endfor %} Portfolio</h1>
 </div>
 <div class="row">
     <h2 style="padding-left: 15Px">Overall Performance</h2>
