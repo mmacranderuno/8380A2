@@ -50,8 +50,8 @@ def customer_edit(request, pk):
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     customer.deleted = 1
-    stocks = Stock.objects.filter(customer=customer.id)
-    investments = Investment.objects.filter(customer=customer.id)
+    stocks = customer.stocks.all()
+    investments = customer.investments.all()
     for stock in stocks:
         stock.deleted = 1
         stock.deleted_date = datetime.datetime.now()
